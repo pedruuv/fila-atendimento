@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: fila-atendimento-api
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/fila-atendimento}
+    username: ${SPRING_DATASOURCE_USERNAME:fila_atendimento}
+    password: ${SPRING_DATASOURCE_PASSWORD:fila_atendimento_dev}
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  jpa:
+    hibernate:
+      # The schema is owned exclusively by the Flyway migrations.
+      ddl-auto: none
+    open-in-view: false
+
+server:
+  port: ${SERVER_PORT:8080}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+security:
+  jwt:
+    # NEVER use this default value in production: always set JWT_SECRET (at least 32 characters).
+    secret: ${JWT_SECRET:chave-de-assinatura-do-jwt-apenas-para-desenvolvimento-min-32}
+    validity-seconds: ${JWT_VALIDITY_SECONDS:3600}
+    issuer: fila-atendimento-api
+  cors:
+    # Comma-separated list; "*" allows any origin (development only).
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:*,http://127.0.0.1:*}
+  initial-users:
+    users:
+      - name: Administrador
+        login: ${INITIAL_ADMIN_LOGIN:admin@fila.dev}
+        password: ${INITIAL_ADMIN_PASSWORD:SenhaDeAdmin@Dev}
+        role: ADMIN
+      - name: Atendente Demonstração
+        login: ${INITIAL_ATTENDANT_LOGIN:atendente@fila.dev}
+        password: ${INITIAL_ATTENDANT_PASSWORD:SenhaDeAtendente@Dev}
+        role: ATTENDANT
+
+attendance:
+  # Maximum number of priority tickets called in a row before a regular one
+  # is called (fairness policy). 0 disables the cap.
+  max-consecutive-priority: ${ATTENDANCE_MAX_CONSECUTIVE_PRIORITY:3}
+
+logging:
+  level:
+    root: INFO

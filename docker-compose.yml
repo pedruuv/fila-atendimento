@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: fila-atendimento-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fila-atendimento
+      POSTGRES_USER: fila_atendimento
+      POSTGRES_PASSWORD: ${DB_SENHA:-fila_atendimento_dev}
+    ports:
+      - "5432:5432"
+    volumes:
+      - dados_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fila_atendimento -d fila-atendimento"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  api:
+    build: .
+    container_name: fila-atendimento-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/fila-atendimento
+      SPRING_DATASOURCE_USERNAME: fila_atendimento
+      SPRING_DATASOURCE_PASSWORD: ${DB_SENHA:-fila_atendimento_dev}
+      JWT_SEGREDO: ${JWT_SEGREDO:-chave-de-assinatura-do-jwt-apenas-para-ambiente-de-desenvolvimento-troque-aqui}
+      JWT_VALIDADE_SEGUNDOS: ${JWT_VALIDADE_SEGUNDOS:-3600}
+      # Credenciais iniciais criadas no primeiro boot (apenas conveniência de dev).
+      # Em produção, informe valores próprios e troque-os em seguida.
+      USUARIOS_INICIAIS_ADMIN_LOGIN: ${USUARIOS_INICIAIS_ADMIN_LOGIN:-admin@fila.dev}
+      USUARIOS_INICIAIS_ADMIN_SENHA: ${USUARIOS_INICIAIS_ADMIN_SENHA:-SenhaDeAdmin@Dev}
+      USUARIOS_INICIAIS_ATENDENTE_LOGIN: ${USUARIOS_INICIAIS_ATENDENTE_LOGIN:-atendente@fila.dev}
+      USUARIOS_INICIAIS_ATENDENTE_SENHA: ${USUARIOS_INICIAIS_ATENDENTE_SENHA:-SenhaDeAtendente@Dev}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  dados_postgres:
